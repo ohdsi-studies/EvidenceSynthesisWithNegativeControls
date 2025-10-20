@@ -156,6 +156,42 @@ simulateData <- function(seed, settings) {
               normalApproximations = normalApproximations))  
 }
 
+#' Run one simulation study
+#'
+#' @param seed           The random seed to use when generating the data.
+#' @param settings       An object created with the `createSimulationSettings()` function.
+#' @param methodFunction A function that applies the method to the simulated data. See details 
+#'                       below.
+#' @param ...            Additional parameters to be passed to the `methodFunction`
+#'
+#' @details
+#' The `methodFunction` should have at least two input parameters: 
+#' - `data`, the simulated data. This is a list of two dataframes:
+#'     - `normalApproximations`, with fields `logRr`, `seLogRr`, `outcomeId`, and `databaseId`.
+#'     - `nonNormalApproximations`. This currently contains an adaptive grid. with fields `point`,
+#'       `value`, `outcomeId`, and `databaseId`
+#' - The same settings object passed to `simulateOne`.
+#' 
+#' The `methodFunction` is expected to return a data frame with one row per outcome of interest, and
+#' the following fields:
+#' - `logRr`: Log of the estimated mean effect size.
+#' - `logLb`: Log of the lower bound of the 95% confidence or credible interval of the mean effect
+#'   size.
+#' - `logUb`: Log of the upper bound of the 95% confidence or credible interval of the mean effect
+#'   size.
+#' - `seLogRr`: Standard error around the (log of the) mean effect size. 
+#' - `logPiLb`: Log of the lower bound of the prediction interval.
+#' - `logPiUb`: Log of the upper bound of the prediction interval.
+#' - `seLogPi`: Standard error of the prediction interval.
+#' - `tau`: Random effect: standard deviation around the log of the mean effect size.
+#' - `tauLb`: Random effect: Lower bound of the 95% confidence or credible interval around the 
+#'            standard deviation around the log of the mean effect size.
+#' - `tauUb`: Random effect: Upper bound of the 95% confidence or credible interval around the 
+#'            standard deviation around the log of the mean effect size.
+#' 
+#' @returns
+#' Metrics to be used as input for the `evaluateResults()` function.
+#' 
 simulateOne <- function(seed, settings, methodFunction, ...) {
   cacheFolder <- paste("Simulations/cache", rlang::hash(settings), sep = "_")
   if (!dir.exists(cacheFolder)) {
