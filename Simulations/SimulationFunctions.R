@@ -44,7 +44,7 @@ createSimulationSettings <- function(
     nCaptureProcessChars = 20,
     cpcConsistency = 25,
     bias0 = 0.1,
-    biasCpcSd = 0.1
+    biasCpcSd = 0.05
 ) {
   # Note: currently only supporting per-database n, but no other per-DB parameters
   args <- list()
@@ -220,6 +220,75 @@ simulateOne <- function(seed, settings, methodFunction, ...) {
   }
   return(estimates)
 }
+
+# Code for verifying simulation --------------------------------------------------------------------
+# settings <- createSimulationSettings()
+plotSystematicErrorDistributions <- function(settings, seed = NULL) {
+  # Compute the systematic error distribution within each database and plot it. Used to check if
+  # distributions look similar to what is observed in real-world
+  
+  data <- simulateData(seed, settings)
+  
+  x <- seq(log(0.1), log(10), length.out = 100)
+  compute <- function(x, mcmc) {
+    yMcmc <- dnorm(rep(x, nrow(mcmc$chain)), mean = mcmc$chain[, 1], sd = 1/sqrt(mcmc$chain[, 2]))
+    return(quantile(yMcmc, c(0.025, 0.5, 0.975)))
+  }
+  plotData <- list()
+  for (i in seq_len(settings$esSettings$nSites)) {
+    ncApproximations <- data$normalApproximations |>
+      filter(databaseId == i, outcomeId <= settings$nNegativeControls)
+    null <- EmpiricalCalibration::fitMcmcNull(
+      logRr = ncApproximations$logRr,
+      seLogRr = ncApproximations$seLogRr
+    )
+    ys <- sapply(x, compute, mcmc = attr(null, "mcmc"))
+    y <- ys[2, ]
+    yMaxLb <- ys[1, ]
+    yMaxUb <- ys[3, ]
+    normFactor <- max(ys[2, ])
+    y <- y / normFactor
+    yMaxLb <- yMaxLb / normFactor
+    yMaxUb <- yMaxUb / normFactor
+    plotData[[i]] <- tibble(
+      databaseId = sprintf("Database %s", i),
+      x = x,
+      yMax = y,
+      yMaxLb = yMaxLb,
+      yMaxUb =  yMaxUb,
+      yMin = 0
+    )
+    # Are we calibrated (using leave-one-out)?
+    # EmpiricalCalibration::plotCalibration(
+    #   logRr = ncApproximations$logRr,
+    #   seLogRr = ncApproximations$seLogRr,
+    #   useMcmc = F
+    # )
+  }
+  plotData <- bind_rows(plotData)
+  breaks <- c(0.25, 1, 4, 8)
+  ggplot2::ggplot(plotData) +
+    ggplot2::geom_vline(xintercept = log(breaks), colour = "#AAAAAA", lty = 1, size = 0.4) +
+    ggplot2::geom_vline(xintercept = 0, size = 0.8) +
+    ggplot2::geom_ribbon(ggplot2::aes(x = .data$x, ymax = .data$yMax, ymin = .data$yMin), fill = "#FF2700", alpha = 0.6, data = plotData) +
+    ggplot2::geom_ribbon(ggplot2::aes(x = .data$x, ymax = .data$yMaxUb, ymin = .data$yMax), fill = "#FF2700", alpha = 0.3, data = plotData) +
+    ggplot2::coord_cartesian(xlim = log(c(0.1, 10)), ylim = c(0, 2)) +
+    ggplot2::scale_x_continuous("Systematic Error", breaks = log(breaks), labels = breaks) +
+    ggplot2::facet_grid(databaseId ~ .) +
+    ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
+                   panel.grid.minor = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   axis.title.x = ggplot2::element_text(size = 14),
+                   axis.title.y = ggplot2::element_blank(),
+                   axis.text.x = ggplot2::element_text(size = 14),
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank(),
+                   strip.text.x = ggplot2::element_text(size = 14),
+                   strip.text.y.left = ggplot2::element_text(size = 14, angle = 0, hjust = 0),
+                   strip.background = ggplot2::element_blank(),
+                   panel.spacing.y = ggplot2::unit(0, "lines"))
+}
+ 
 
 # Baseline approaches ------------------------------------------------------------------------------
 # data = simulateData(1, settings)
