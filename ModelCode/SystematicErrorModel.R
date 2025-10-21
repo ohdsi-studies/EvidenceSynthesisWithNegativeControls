@@ -7,6 +7,8 @@ library(mvtnorm)
 library(dplyr)
 library(tidyr)
 
+# Fitting the systematic errmor model ------------------------------------------
+
 fitSystematicErrorModel <- function(data) {
   
   # Non-Bayesian model fitting. Outputs MLE of mean vector and covariance matrix. Currently using
@@ -103,6 +105,7 @@ fitSystematicErrorModel <- function(data) {
   ))
 }
 
+# Calibration functions --------------------------------------------------------
 calibrateCiRandomEffects <- function(model, newData) {
   modelDbIds <- names(model$mean)
   dataDbIds <- newData$databaseId[!is.na(newData$seLogRr)]
@@ -400,6 +403,8 @@ calibrateCiBayesian <- function(model, newData) {
   ))
 }
 
+
+# Applying the systematic error model ------------------------------------------
 applyGeneralizedModel <- function(data, settings, bayesian = TRUE) {
   # Apply Martijn's generalized calibration model. Currently only supports non-Bayesian approach for
   # the error model, but the meta-analysis is Bayesian.
