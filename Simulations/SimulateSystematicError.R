@@ -118,4 +118,36 @@ results <- ParallelLogger::clusterApply(cluster, 1:200, simulateOne, settings = 
 evaluateResults(results, settings)
 # coverageCi = 0.954, precisionCi = 17, coveragePi = 0.975, precisionPi = 5.38, coverageTau = 0.997, precisionTau = 39.1
 
+# Simulation with more databases of varying sizes, high consistency, more iterations --------------------------------------
+settings <- createSimulationSettings(
+  esSettings = EvidenceSynthesis::createSimulationSettings(
+    nSites = 10,
+    n = runif(10, 2000, 6000),
+    minBackgroundHazard = 2e-05,
+    maxBackgroundHazard = 2e-04,
+    hazardRatio = 2,
+    randomEffectSd = 0.25
+  ),
+  nNegativeControls = 50,
+  nOutcomesOfInterest = 10,
+  cpcConsistency = 25
+)
+plotSystematicErrorDistributions(settings)
+
+results <- ParallelLogger::clusterApply(cluster, 1:200, simulateOne, settings = settings, methodFunction = applyNaiveApproach, bayesian = FALSE)
+evaluateResults(results, settings)
+# coverageCi = 0.786, precisionCi = 64.5, coveragePi = 0.805, precisionPi = 17.4, coverageTau = 0.956, precisionTau = 44.6
+
+results <- ParallelLogger::clusterApply(cluster, 1:200, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "normal", bayesian = TRUE)
+evaluateResults(results, settings)
+# coverageCi = 0.915, precisionCi = 32.8, coveragePi = 0.941, precisionPi = 8.89, coverageTau = NA, precisionTau = NA
+
+results <- ParallelLogger::clusterApply(cluster, 1:200, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "non-normal", bayesian = TRUE)
+evaluateResults(results, settings)
+# coverageCi = 0.922, precisionCi = 29.3, coveragePi = 0.945, precisionPi = 8.26, coverageTau = NA, precisionTau = NA
+
+results <- ParallelLogger::clusterApply(cluster, 1:200, simulateOne, settings = settings, methodFunction = applyGeneralizedModel, bayesian = TRUE)
+evaluateResults(results, settings)
+# coverageCi = 0.926, precisionCi = 28.7, coveragePi = 0.949, precisionPi = 8.43, coverageTau = 0.997, precisionTau = 64.5
+
 ParallelLogger::stopCluster(cluster)
