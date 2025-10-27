@@ -395,7 +395,9 @@ applyNaiveApproach <- function(data, settings, bayesian = TRUE) {
     ooiApproximations <- data$normalApproximations |>
       filter(outcomeId > settings$nNegativeControls,
              databaseId == i)
-    
+    if (nrow(ooiApproximations) == 0) {
+      next
+    }
     null <- suppressWarnings(EmpiricalCalibration::fitMcmcNull(
       logRr = ncApproximations$logRr,
       seLogRr = ncApproximations$seLogRr

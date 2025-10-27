@@ -20,5 +20,5 @@ snow::clusterExport(cluster, c("fitSystematicErrorModel", "calibrateCiRandomEffe
 source("LegendAnalyses/EvaluationFunctions.R")
 
 
-results <-estimateLeaveOneOut(cluster, methodFunction = applyNaiveApproach, bayesian = TRUE)
-evaluateResults(results, ncSettings)
+results <- estimateLeaveOneOut(cluster, methodFunction = applyNaiveApproach, bayesian = TRUE)
+evaluateResults(results[2], ncSettings)

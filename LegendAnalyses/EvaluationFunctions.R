@@ -1,5 +1,6 @@
 
 # row = list(targetId = 102100000, comparatorId = 202100000, analysisId = 7); methodFunction = applyNaiveApproach; args = list(bayesian = TRUE)
+# row = tcas[[8]]
 estimateForTca <- function(row, methodFunction, ...) {
   cacheFolder <- file.path("LegendAnalyses", "cache")
   if (!dir.exists(cacheFolder)) {
@@ -58,9 +59,9 @@ estimateForTca <- function(row, methodFunction, ...) {
       # Need to renumber outcome IDs for functions, so NCs have IDs 1...n:
       ncIds <- outcomeIds[!outcomeIds == outcomeId]
       tempEstimates <- estimates |>
-        mutate(outcomeId = if_else(outcomeId == !!outcomeId, length(negativeControlIds), match(outcomeId, ncIds)))
+        mutate(outcomeId = if_else(outcomeId == !!outcomeId, length(outcomeIds), match(outcomeId, ncIds)))
       tempProfiles <- profiles |>
-        mutate(outcomeId = if_else(outcomeId == !!outcomeId, length(negativeControlIds), match(outcomeId, ncIds)))
+        mutate(outcomeId = if_else(outcomeId == !!outcomeId, length(outcomeIds), match(outcomeId, ncIds)))
       data <- list(
         normalApproximations = tempEstimates,
         nonNormalApproximations = tempProfiles
@@ -78,6 +79,7 @@ estimateForTca <- function(row, methodFunction, ...) {
 }
 
 estimateLeaveOneOut <- function(cluster, methodFunction, ...) {
+  snow::clusterExport(cluster, c("estimateForTca"))
   tcas <- readRDS("LegendAnalyses/estimates.rds") |>
     distinct(targetId, targetName, comparatorId, comparatorName, analysisId, analysisName) |>
     group_by(row_number()) |>
