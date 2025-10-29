@@ -332,6 +332,8 @@ calibrateCiBayesian <- function(model, newData) {
   }
 
   modelDbIds <- names(model$mean)
+  newData <- newData |>
+    filter(!is.na(seLogRr))
   availableDbIds <- intersect(modelDbIds, newData$databaseId)
 
   if (length(availableDbIds) == 0) {
@@ -345,29 +347,33 @@ calibrateCiBayesian <- function(model, newData) {
 
   nDatabases <- length(availableDbIds)
 
-  if (nDatabases == 1) {
-    warning("Only one database estimate is available. Bayesian analysis for tau is not possible. Returning frequentist result.")
-    null <- c(meanSys, sqrt(covSys))
-    class(null) <- "null"
-    calibratedCi <- EmpiricalCalibration::calibrateConfidenceInterval(
-      logRr = newData$logRr,
-      seLogRr = newData$seLogRr,
-      model = EmpiricalCalibration::convertNullToErrorModel(null)
-    )
-    return(data.frame(
-      mu = calibratedCi$logRr,
-      muLb = calibratedCi$logLb95Rr,
-      muUb = calibratedCi$logUb95Rr,
-      tau = NA,
-      tauLb = NA,
-      tauUb = NA,
-      piLb = NA,
-      piUb = NA
-    ))
-  }
+  # if (nDatabases == 1) {
+  #   warning("Only one database estimate is available. Bayesian analysis for tau is not possible. Returning frequentist result.")
+  #   null <- c(meanSys, sqrt(covSys))
+  #   class(null) <- "null"
+  #   calibratedCi <- EmpiricalCalibration::calibrateConfidenceInterval(
+  #     logRr = newData$logRr,
+  #     seLogRr = newData$seLogRr,
+  #     model = EmpiricalCalibration::convertNullToErrorModel(null)
+  #   )
+  #   return(data.frame(
+  #     mu = calibratedCi$logRr,
+  #     muLb = calibratedCi$logLb95Rr,
+  #     muUb = calibratedCi$logUb95Rr,
+  #     tau = NA,
+  #     tauLb = NA,
+  #     tauUb = NA,
+  #     piLb = NA,
+  #     piUb = NA
+  #   ))
+  # }
 
   yPrime <- newData$logRr - meanSys
-  sigmaTotal <- covSys + diag(newData$seLogRr^2)
+  if (nDatabases == 1) {
+    sigmaTotal <- covSys + newData$seLogRr^2
+  } else {
+    sigmaTotal <- covSys + diag(newData$seLogRr^2)
+  }
   fit <- optim(c(0, 1), minLogPosterior, yPrime = yPrime, sigmaTotal = sigmaTotal)
 
   # Profile likelihood for roughly correct scale:
@@ -399,7 +405,8 @@ calibrateCiBayesian <- function(model, newData) {
     tauUb = hdiTau[2],
     piLb = pi[1],
     piUb = pi[2],
-    seLogRr = sqrt(mean((traces[, 1] - mu)^2))
+    seLogRr = sqrt(mean((traces[, 1] - mu)^2)),
+    nDatabases = nDatabases
   ))
 }
 

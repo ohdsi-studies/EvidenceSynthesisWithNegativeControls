@@ -21,4 +21,17 @@ source("LegendAnalyses/EvaluationFunctions.R")
 
 
 results <- estimateLeaveOneOut(cluster, methodFunction = applyNaiveApproach, bayesian = TRUE)
-evaluateResults(results[2], ncSettings)
+evaluateLegendResults(results)
+
+
+
+results <- estimateLeaveOneOut(cluster, methodFunction = applyCurrentApproach, bayesian = TRUE)
+evaluateLegendResults(results)
+
+
+results <- estimateLeaveOneOut(cluster, methodFunction = applyGeneralizedModel, bayesian = TRUE)
+evaluateLegendResults(results)
+
+
+
+ParallelLogger::stopCluster(cluster)

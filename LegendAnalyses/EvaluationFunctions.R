@@ -1,12 +1,14 @@
 
 # row = list(targetId = 102100000, comparatorId = 202100000, analysisId = 7); methodFunction = applyNaiveApproach; args = list(bayesian = TRUE)
-# row = tcas[[8]]
+# row = tcas[[1]]
 estimateForTca <- function(row, methodFunction, ...) {
   cacheFolder <- file.path("LegendAnalyses", "cache")
   if (!dir.exists(cacheFolder)) {
     dir.create(cacheFolder)
   }
-  estimatesCacheFilename <- file.path(cacheFolder, sprintf("Estimates_t%d_c%d_a%d_m%s.rds", row$targetId, row$comparatorId, row$analysisId, rlang::hash(methodFunction)))
+  dummy <- list(...)
+  dummy$methodFunction <- methodFunction
+  estimatesCacheFilename <- file.path(cacheFolder, sprintf("Estimates_t%d_c%d_a%d_m%s.rds", row$targetId, row$comparatorId, row$analysisId, rlang::hash(dummy)))
   if (file.exists(estimatesCacheFilename)) {
     maEstimates <- readRDS(estimatesCacheFilename)
   } else {
@@ -52,7 +54,7 @@ estimateForTca <- function(row, methodFunction, ...) {
     )
     
     maEstimates <- list()
-    # i = 1
+    # i = 7
     for (i in seq_along(outcomeIds)) {
       outcomeId <- outcomeIds[i]
       
@@ -89,6 +91,28 @@ estimateLeaveOneOut <- function(cluster, methodFunction, ...) {
   return(estimates)
 }
 
-ncSettings <-   list(esSettings = list(hazardRatio = 1, 
-                                       randomEffectSd = 0))
-class(ncSettings$esSettings) <- "simulationSettings"
+evaluateLegendResults <- function(results, perTca = FALSE) {
+  ncSettings <-   list(esSettings = list(hazardRatio = 1, 
+                                         randomEffectSd = 0))
+  class(ncSettings$esSettings) <- "simulationSettings"
+  
+  if (perTca) {
+    # result = results[[1]]
+    for (result in results) {
+      writeLines(sprintf("\n%s vs %s, %s:", result$targetName[1], result$comparatorName[1], result$analysisName[1]))
+      evaluateResults(result, ncSettings)
+    }
+  }
+  resultsPerAnalysis <- results |>
+    bind_rows(results) |>
+    group_by(analysisName) |>
+    group_split()
+  
+  for (result in resultsPerAnalysis) {
+    writeLines(sprintf("\nOverall %s:", result$analysisName[1]))
+    evaluateResults(result, ncSettings)
+  }
+  
+}
+
+
