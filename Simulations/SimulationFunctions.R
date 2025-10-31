@@ -170,7 +170,12 @@ simulateData <- function(seed, settings) {
 #'     - `normalApproximations`, with fields `logRr`, `seLogRr`, `outcomeId`, and `databaseId`.
 #'     - `nonNormalApproximations`. This currently contains an adaptive grid. with fields `point`,
 #'       `value`, `outcomeId`, and `databaseId`
-#' - The same settings object passed to `simulateOne`.
+#' - `settings` The same settings object passed to `simulateOne`.
+#' 
+#' `databaseId` will be a sequential integer from 1 to `settings$esSettings$nSites`.
+#' `outcomeId` is also a sequential integer. 1 ... settings$nNegativeControls are the negative 
+#' controls, and settings$nNegativeControls+1 ... settings$nNegativeControls+settings$nOutcomesOfInterest
+#' are the outcomes of interest for which estimates need to be produced (see below).
 #' 
 #' The `methodFunction` is expected to return a data frame with one row per outcome of interest, and
 #' the following fields:
