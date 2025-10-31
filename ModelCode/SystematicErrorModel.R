@@ -441,6 +441,7 @@ applyGeneralizedModel <- function(data, settings, bayesian = TRUE) {
                               tau = estimate$tau,
                               tauLb = estimate$tauLb,
                               tauUb = estimate$tauUb,
+                              nDatabases = estimate$nDatabases,
                               outcomeId = newData$outcomeId[1])
 
         
@@ -456,6 +457,7 @@ applyGeneralizedModel <- function(data, settings, bayesian = TRUE) {
                                tau = sqrt(estimate$tau2),
                                tauLb = sqrt(estimate$tau2CiLower),
                                tauUb = sqrt(estimate$tau2CiUpper),
+                               nDatabases = estimate$nDatabases,
                                outcomeId = newData$outcomeId[1])
     }
   }

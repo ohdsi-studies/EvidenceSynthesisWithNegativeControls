@@ -188,6 +188,8 @@ simulateData <- function(seed, settings) {
 #'            standard deviation around the log of the mean effect size.
 #' - `tauUb`: Random effect: Upper bound of the 95% confidence or credible interval around the 
 #'            standard deviation around the log of the mean effect size.
+#' - `nDatabases`: Number of databasese with valid estimates that contributed to the meta-analytic 
+#'            estimate. Can be used when analyzing the results.
 #' 
 #' @returns
 #' Metrics to be used as input for the `evaluateResults()` function.
@@ -317,6 +319,7 @@ applyCurrentApproach <- function(data, settings, bayesian = TRUE, approximation 
                          logPiLb = estimate$predictionInterval95Lb,
                          logPiUb = estimate$predictionInterval95Ub,
                          seLogPi = (estimate$predictionInterval95Ub - estimate$predictionInterval95Lb) / (2 * qnorm(0.975)),
+                         nDatabases = sum(!is.na(group$seLogRr)),
                          outcomeId = outcomeId)
     } else {
       meta <- meta::metagen(
@@ -334,6 +337,7 @@ applyCurrentApproach <- function(data, settings, bayesian = TRUE, approximation 
                          logPiLb = s$predict$lower,
                          logPiUb = s$predict$upper,
                          seLogPi = s$predict$seTE,
+                         nDatabases = sum(!is.na(group$seLogRr)),
                          outcomeId = outcomeId)
     }
     return(estimate)
@@ -378,7 +382,8 @@ applyCurrentApproach <- function(data, settings, bayesian = TRUE, approximation 
   ) |>
     transmute(logPiLb = logLb95Rr, logPiUb = logUb95Rr, seLogPi = seLogRr)
   estimatesOois <- bind_cols(calibratedCi, calibratedPi) |>
-    mutate(tau = as.numeric(NA), tauLb = as.numeric(NA), tauUb = as.numeric(NA))
+    mutate(tau = as.numeric(NA), tauLb = as.numeric(NA), tauUb = as.numeric(NA)) |>
+    mutate(nDatabases = ooiEstimates$nDatabases)
   return(estimatesOois)
 }
 
@@ -428,7 +433,8 @@ applyNaiveApproach <- function(data, settings, bayesian = TRUE) {
                                                     seLogPi = (estimate$predictionInterval95Ub - estimate$predictionInterval95Lb) / (2 * qnorm(0.975)),
                                                     tau = estimate$tau,
                                                     tauLb = estimate$tau95Lb,
-                                                    tauUb = estimate$tau95Ub)
+                                                    tauUb = estimate$tau95Ub,
+                                                    nDatabases = sum(!is.na(group$seLogRr)))
     } else {
       meta <- meta::metagen(
         TE = group$logRr, 
@@ -447,7 +453,8 @@ applyNaiveApproach <- function(data, settings, bayesian = TRUE) {
                                                     seLogPi = s$predict$seTE,
                                                     tau = s$tau,
                                                     tauLb = s$lower.tau,
-                                                    tauUb = s$upper.tau)
+                                                    tauUb = s$upper.tau,
+                                                    nDatabases = sum(!is.na(group$seLogRr)))
     }
   }
   estimatesOois <- bind_rows(estimatesOois)

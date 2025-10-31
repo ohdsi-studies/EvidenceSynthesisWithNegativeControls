@@ -54,7 +54,7 @@ estimateForTca <- function(row, methodFunction, ...) {
     )
     
     maEstimates <- list()
-    # i = 7
+    # i = 1
     for (i in seq_along(outcomeIds)) {
       outcomeId <- outcomeIds[i]
       
@@ -91,7 +91,7 @@ estimateLeaveOneOut <- function(cluster, methodFunction, ...) {
   return(estimates)
 }
 
-evaluateLegendResults <- function(results, perTca = FALSE) {
+evaluateLegendResults <- function(results, perTca = FALSE, minNdatabases = 3) {
   ncSettings <-   list(esSettings = list(hazardRatio = 1, 
                                          randomEffectSd = 0))
   class(ncSettings$esSettings) <- "simulationSettings"
@@ -100,11 +100,14 @@ evaluateLegendResults <- function(results, perTca = FALSE) {
     # result = results[[1]]
     for (result in results) {
       writeLines(sprintf("\n%s vs %s, %s:", result$targetName[1], result$comparatorName[1], result$analysisName[1]))
+      result <- result |>
+        filter(nDatabases >= minNdatabases)
       evaluateResults(result, ncSettings)
     }
   }
   resultsPerAnalysis <- results |>
     bind_rows(results) |>
+    filter(nDatabases >= minNdatabases) |>
     group_by(analysisName) |>
     group_split()
   
