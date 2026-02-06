@@ -39,7 +39,7 @@ evaluateResults(results, settings)
 
 results <- ParallelLogger::clusterApply(cluster, 1:100, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "normal", bayesian = FALSE)
 evaluateResults(results, settings)
-# coverageCi = 0.945, precisionCi = 44.2, coveragePi = 0.897, precisionPi = 13.5, coverageTau = NA, precisionTau = NA
+# coverageCi = 0.945, precisionCi = 44.2, coveragePi = 0.915, precisionPi = 11, coverageTau = NA, precisionTau = NA
 
 results <- ParallelLogger::clusterApply(cluster, 1:100, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "normal", bayesian = TRUE)
 evaluateResults(results, settings)
@@ -76,7 +76,7 @@ evaluateResults(results, settings)
 
 results <- ParallelLogger::clusterApply(cluster, 1:100, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "normal", bayesian = FALSE)
 evaluateResults(results, settings)
-# coverageCi = 0.953, precisionCi = 30.8, coveragePi = 0.9, precisionPi = 12.7, coverageTau = NA, precisionTau = NA
+# coverageCi = 0.953, precisionCi = 30.8, coveragePi = 0.917, precisionPi = 10.6, coverageTau = NA, precisionTau = NA
 
 results <- ParallelLogger::clusterApply(cluster, 1:100, simulateOne, settings = settings, methodFunction = applyCurrentApproach, approximation = "normal", bayesian = TRUE)
 evaluateResults(results, settings)

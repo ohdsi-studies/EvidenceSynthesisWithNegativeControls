@@ -341,7 +341,7 @@ applyCurrentApproach <- function(data, settings, bayesian = TRUE, approximation 
                          logUb = rnd$upper,
                          logPiLb = s$predict$lower,
                          logPiUb = s$predict$upper,
-                         seLogPi = s$predict$seTE,
+                         seLogPi = (s$predict$upper - s$predict$lower) / (2 * qnorm(0.975)),
                          nDatabases = sum(!is.na(group$seLogRr)),
                          outcomeId = outcomeId)
     }
